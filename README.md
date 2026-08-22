@@ -31,22 +31,23 @@ Digital Product Launch / Advertising Content
                     ↓
        Marketing Insights
 
-Key Marketing KPIs
+## Key Marketing KPIs
 
 The project focuses on the following proposed metrics:
 
-Feature Engagement Rate
-Peak Attention
-Drop-off Points
-Emotional Recall & Valence
-Confusion Score
-AI Approach
+- Feature Engagement Rate
+- Peak Attention
+- Drop-off Points
+- Emotional Recall & Valence
+- Confusion Score
+
+## AI Approach
 
 The proposed project combines computer vision and AI-based analysis.
 
 The planned analysis includes:
 
-Facial Landmark Detection
-Facial Emotion Analysis
-Gaze and Attention Analysis
-AOI (Areas of Interest) Analysis
+- Facial Landmark Detection
+- Facial Emotion Analysis
+- Gaze and Attention Analysis
+- AOI (Areas of Interest) Analysis
