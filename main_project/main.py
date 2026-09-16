@@ -33,12 +33,16 @@ FRAMES_FOLDER = os.path.join(BASE_DIR, "product_frames")
 RESULTS_FOLDER = os.path.join(BASE_DIR, "product_results")
 SAMPLE_VIDEO_PATH = os.path.join(BASE_DIR, "sample_ad.mp4")
 
+CLICKS_JSON_PATH = os.path.join(RESULTS_FOLDER, "click_events.json")
+CLICKS_CSV_PATH = os.path.join(RESULTS_FOLDER, "click_events.csv")
+
 os.makedirs(FRAMES_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 
 app = Flask(__name__, template_folder=BASE_DIR)
 
 session_results = []
+click_events = []
 
 # TOPLU (BATCH) ÇIKARIM PROMPT'U
 BATCH_UX_PROMPT = """
@@ -89,8 +93,10 @@ def serve_video(filename):
 
 @app.route("/reset", methods=["POST"])
 def reset():
-    global session_results
+    global session_results, click_events
+
     session_results = []
+    click_events = []
     for folder in [FRAMES_FOLDER, RESULTS_FOLDER]:
         os.makedirs(folder, exist_ok=True)
         for file in os.listdir(folder):
@@ -126,6 +132,83 @@ def upload_frame():
         print(f"✗ Kare kaydetme hatası: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/upload_click", methods=["POST"])
+def upload_click():
+    global click_events
+
+    try:
+        data = request.get_json(force=True)
+
+        video_time = float(data.get("video_time", 0))
+        x = float(data.get("x", 0))
+        y = float(data.get("y", 0))
+        x_norm = float(data.get("x_norm", 0))
+        y_norm = float(data.get("y_norm", 0))
+
+        click = {
+            "video_time": round(video_time, 3),
+            "x": round(x, 1),
+            "y": round(y, 1),
+            "x_norm": round(x_norm, 4),
+            "y_norm": round(y_norm, 4)
+        }
+
+        click_events.append(click)
+
+        # JSON olarak kaydet
+        with open(CLICKS_JSON_PATH, "w", encoding="utf-8") as f:
+            json.dump(click_events, f, ensure_ascii=False, indent=2)
+
+        # CSV olarak da kaydet
+        pd.DataFrame(click_events).to_csv(
+            CLICKS_CSV_PATH,
+            index=False,
+            encoding="utf-8"
+        )
+
+        print(
+            f"✓ Tıklama kaydedildi | "
+            f"Video: {video_time:.2f}s | "
+            f"X: {x:.1f} | Y: {y:.1f}"
+        )
+
+        return jsonify({
+            "status": "saved",
+            "click": click
+        })
+
+    except Exception as e:
+        print(f"✗ Tıklama kaydetme hatası: {e}")
+        return jsonify({"error": str(e)}), 500
+
+def merge_clicks_with_emotions(results, clicks):
+    """
+    Click verilerini emotion sonuçlarıyla zaman aralığına göre eşleştirir.
+
+    0-2 saniye  -> 2. saniye emotion
+    2-4 saniye  -> 4. saniye emotion
+    4-6 saniye  -> 6. saniye emotion
+    6-8 saniye  -> 8. saniye emotion
+    8-10 saniye -> 10. saniye emotion
+    """
+
+    for result in results:
+        emotion_second = float(result.get("second", 0))
+
+        matching_clicks = []
+
+        for click in clicks:
+            click_time = float(click.get("video_time", 0))
+
+            if (emotion_second - 2) < click_time <= emotion_second:
+                matching_clicks.append(click)
+
+        result["interaction"] = {
+            "click_count": len(matching_clicks),
+            "clicks": matching_clicks
+        }
+
+    return results
 
 # Test bittiğinde TÜM KARELERİ TEK İSTEKTE GEMINI'A GÖNDERİR
 @app.route("/finalize_and_analyze", methods=["POST"])
@@ -133,65 +216,174 @@ def finalize_and_analyze():
     global session_results
     session_results = []
 
-    saved_frames = sorted(glob.glob(os.path.join(FRAMES_FOLDER, "frame_*.jpg")))
+    saved_frames = sorted(
+        glob.glob(os.path.join(FRAMES_FOLDER, "frame_*.jpg"))
+    )
 
     if not saved_frames:
         return jsonify({"error": "Hiçbir kare yakalanamadı"}), 400
 
-    print(f"\n--> {len(saved_frames)} adet kare tek istekte Gemini multimodal API'ye gönderiliyor...")
+    print(
+        f"\n--> {len(saved_frames)} adet kare tek istekte "
+        f"Gemini multimodal API'ye gönderiliyor..."
+    )
 
     images_payload = []
+
     for f_path in saved_frames:
         with Image.open(f_path) as pil_img:
             images_payload.append(pil_img.copy())
 
     try:
-        # Tek seferde tüm görseller + prompt
+        # Gemini analizi
         response = model.generate_content(
             [*images_payload, BATCH_UX_PROMPT],
-            generation_config={"response_mime_type": "application/json"},
+            generation_config={
+                "response_mime_type": "application/json"
+            },
         )
+        print("\n===== GEMINI RAW RESPONSE =====")
+        print(response.text)
+        print("===== END GEMINI RAW RESPONSE =====\n")
+
 
         session_results = json.loads(response.text)
 
-        # Eğer model dizi yerine tek bir nesne dönerse listeye sar
+        # Gemini tek obje döndürürse listeye çevir
         if isinstance(session_results, dict):
             session_results = [session_results]
 
-        print(f"✓ Gemini toplu çıkarımı başarılı! Toplam {len(session_results)} an analiz edildi.")
+        # Click verilerini emotion sonuçlarıyla birleştir
+        session_results = merge_clicks_with_emotions(
+            session_results,
+            click_events
+        )
+
+        print(
+            f"✓ Gemini toplu çıkarımı başarılı! "
+            f"Toplam {len(session_results)} an analiz edildi."
+        )
 
     except Exception as e:
         print(f"✗ Toplu analiz hatası: {e}")
-        return jsonify({"error": str(e)}), 500
 
-    # Toplu JSON ve CSV kaydı
-    json_path = os.path.join(RESULTS_FOLDER, "product_ux_results.json")
+        return jsonify({
+            "error": str(e),
+            "clicks": click_events
+        }), 500
+
+    # ==========================================
+    # JSON KAYDI
+    # ==========================================
+
+    json_path = os.path.join(
+        RESULTS_FOLDER,
+        "product_ux_results.json"
+    )
+
     with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(session_results, f, ensure_ascii=False, indent=2)
+        json.dump(
+            session_results,
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
+
+    # ==========================================
+    # EMOTION + CLICK CSV
+    # ==========================================
 
     flattened = []
+
     for r in session_results:
+
+        interaction = r.get("interaction", {})
+        clicks = interaction.get("clicks", [])
+
+        # Click koordinatlarını tek hücrede sakla
+        click_coordinates = "; ".join(
+            [
+                f"({c.get('x')}, {c.get('y')})"
+                for c in clicks
+            ]
+        )
+
         flattened.append({
+            # Zaman
             "second": r.get("second"),
-            "dominant_emotion": r.get("affective_core", {}).get("dominant_emotion"),
-            "valence": r.get("affective_core", {}).get("valence_score"),
-            "arousal": r.get("affective_core", {}).get("arousal_score"),
-            "aida_stage": r.get("marketing_funnel", {}).get("aida_stage"),
-            "brand_receptivity": r.get("marketing_funnel", {}).get("brand_receptivity"),
-            "purchase_intent": r.get("commercial_signals", {}).get("purchase_intent"),
-            "friction": r.get("commercial_signals", {}).get("perceived_value_friction"),
-            "cta_readiness": r.get("marketing_funnel", {}).get("cta_readiness"),
-            "scene_verdict": r.get("marketing_actionable_insight", {}).get("scene_verdict"),
-            "cro_recommendation": r.get("marketing_actionable_insight", {}).get("cro_recommendation"),
+
+            # Emotion
+            "dominant_emotion": r.get(
+                "affective_core", {}
+            ).get("dominant_emotion"),
+
+            "valence": r.get(
+                "affective_core", {}
+            ).get("valence_score"),
+
+            "arousal": r.get(
+                "affective_core", {}
+            ).get("arousal_score"),
+
+            # Marketing
+            "aida_stage": r.get(
+                "marketing_funnel", {}
+            ).get("aida_stage"),
+
+            "brand_receptivity": r.get(
+                "marketing_funnel", {}
+            ).get("brand_receptivity"),
+
+            "purchase_intent": r.get(
+                "commercial_signals", {}
+            ).get("purchase_intent"),
+
+            "friction": r.get(
+                "commercial_signals", {}
+            ).get("perceived_value_friction"),
+
+            "cta_readiness": r.get(
+                "marketing_funnel", {}
+            ).get("cta_readiness"),
+
+            # Insight
+            "scene_verdict": r.get(
+                "marketing_actionable_insight", {}
+            ).get("scene_verdict"),
+
+            "cro_recommendation": r.get(
+                "marketing_actionable_insight", {}
+            ).get("cro_recommendation"),
+
+            # Click / Interaction
+            "click_count": interaction.get(
+                "click_count", 0
+            ),
+
+            "click_coordinates": click_coordinates
         })
 
-    csv_path = os.path.join(RESULTS_FOLDER, "product_ux_results.csv")
-    pd.DataFrame(flattened).to_csv(csv_path, index=False, encoding="utf-8")
+    # CSV dosyasını oluştur
+    csv_path = os.path.join(
+        RESULTS_FOLDER,
+        "product_ux_results.csv"
+    )
 
-    print(f"✓ Raporlar kaydedildi: {csv_path}")
+    pd.DataFrame(flattened).to_csv(
+        csv_path,
+        index=False,
+        encoding="utf-8"
+    )
 
-    return jsonify({"status": "completed", "results": session_results})
+    print(
+        f"✓ Raporlar kaydedildi: {csv_path}"
+    )
 
+    return jsonify({
+        "status": "completed",
+        "results": session_results,
+        "clicks": click_events
+    })
 
 if __name__ == "__main__":
     Timer(1.2, lambda: webbrowser.open("http://127.0.0.1:5000")).start()
