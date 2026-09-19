@@ -1,0 +1,147 @@
+[
+  {
+    "second": 2,
+    "affective_core": {
+      "dominant_emotion": "merak_ilgi",
+      "valence_score": 0.1,
+      "arousal_score": 0.2
+    },
+    "marketing_funnel": {
+      "aida_stage": "farkindalik",
+      "brand_receptivity": "pozitif_baglanti",
+      "cta_readiness": "erken"
+    },
+    "commercial_signals": {
+      "purchase_intent": "orta",
+      "perceived_value_friction": "Yok",
+      "micro_expressions": [
+        "Cene destegiyla odaklanmis bakis (AU6/AU7)",
+        "Nötr-hafif merakli agiz pozisyonu"
+      ]
+    },
+    "marketing_actionable_insight": {
+      "scene_verdict": "Kullanıcı içeriğe odaklanmış ve açılış mesajını değerlendirmeye başlamış.",
+      "cro_recommendation": "Açılışta kanca (hook) cümlesini daha net görsel öğelerle destekleyerek dikkati artırın."
+    },
+    "interaction": {
+      "click_count": 0,
+      "clicks": []
+    }
+  },
+  {
+    "second": 4,
+    "affective_core": {
+      "dominant_emotion": "hayranlik",
+      "valence_score": 0.3,
+      "arousal_score": 0.5
+    },
+    "marketing_funnel": {
+      "aida_stage": "ilgi",
+      "brand_receptivity": "pozitif_baglanti",
+      "cta_readiness": "erken"
+    },
+    "commercial_signals": {
+      "purchase_intent": "yuksek",
+      "perceived_value_friction": "Yok",
+      "micro_expressions": [
+        "Hafif acik agiz (AU25/AU26) - Sasirma ve dikkat artisi",
+        "Elin ceneden ayrilmasiyla artan angajman"
+      ]
+    },
+    "marketing_actionable_insight": {
+      "scene_verdict": "Sunulan değer önerisi veya görsel sürpriz kullanıcıda anlık heyecan ve ilgi uyandırdı.",
+      "cro_recommendation": "Bu aşamadaki merakı sürdürmek için ana faydayı vurgulayan ekranda belirgin yazılar kullanın."
+    },
+    "interaction": {
+      "click_count": 0,
+      "clicks": []
+    }
+  },
+  {
+    "second": 6,
+    "affective_core": {
+      "dominant_emotion": "suphe",
+      "valence_score": -0.2,
+      "arousal_score": 0.1
+    },
+    "marketing_funnel": {
+      "aida_stage": "ilgi",
+      "brand_receptivity": "supheli_yaklasim",
+      "cta_readiness": "kararsiz"
+    },
+    "commercial_signals": {
+      "purchase_intent": "orta",
+      "perceived_value_friction": "Guven sorunu",
+      "micro_expressions": [
+        "Bakislarin yana kaymasi (Bilissel yukleme/Sorgulama)",
+        "Dudak kenarlarinda hafif gerilim (AU14)"
+      ]
+    },
+    "marketing_actionable_insight": {
+      "scene_verdict": "Kullanıcı sunulan iddiayı sorgulamaya veya zihninde doğrulamaya başladı.",
+      "cro_recommendation": "Güven kırılmasını önlemek için ekranın alt köşesinde sosyal kanıt veya kullanıcı yorumu ekleyin."
+    },
+    "interaction": {
+      "click_count": 0,
+      "clicks": []
+    }
+  },
+  {
+    "second": 8,
+    "affective_core": {
+      "dominant_emotion": "kafa_karisikligi",
+      "valence_score": -0.1,
+      "arousal_score": 0.2
+    },
+    "marketing_funnel": {
+      "aida_stage": "arzu",
+      "brand_receptivity": "supheli_yaklasim",
+      "cta_readiness": "kararsiz"
+    },
+    "commercial_signals": {
+      "purchase_intent": "orta",
+      "perceived_value_friction": "Karmasik teklif",
+      "micro_expressions": [
+        "Sabitlenmis direkt odaklanma (AU1/AU2)",
+        "Cene uzerinde el durusuyla derin analitik degerlendirme"
+      ]
+    },
+    "marketing_actionable_insight": {
+      "scene_verdict": "Teklif ayrıntıları değerlendiriliyor ancak mesajın anlaşılabilirliği biraz daha netlik gerektiriyor.",
+      "cro_recommendation": "Karmaşık detayları sadeleştirin ve teklifin değerini tek bir odak noktasına indirin."
+    },
+    "interaction": {
+      "click_count": 0,
+      "clicks": []
+    }
+  },
+  {
+    "second": 10,
+    "affective_core": {
+      "dominant_emotion": "merak_ilgi",
+      "valence_score": 0.1,
+      "arousal_score": 0.3
+    },
+    "marketing_funnel": {
+      "aida_stage": "eyleme_gecis",
+      "brand_receptivity": "pozitif_baglanti",
+      "cta_readiness": "hazir"
+    },
+    "commercial_signals": {
+      "purchase_intent": "yuksek",
+      "perceived_value_friction": "Yok",
+      "micro_expressions": [
+        "Direkt ekrana kitlenme (AU5)",
+        "Nötr-olumlu son karar bakisi"
+      ]
+    },
+    "marketing_actionable_insight": {
+      "scene_verdict": "Kullanıcı eyleme geçmeye hazır ve nihai çağrıyı (CTA) bekliyor.",
+      "cro_recommendation": "Net, yüksek kontrastlı bir CTA butonu ve sınırlı süreli teklif vurgusu ile dönüşümü derhal kapatın."
+    },
+    "interaction": {
+      "click_count": 0,
+      "clicks": []
+    }
+  }
+]
