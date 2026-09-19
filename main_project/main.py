@@ -19,7 +19,7 @@ from PIL import Image
 # GEMINI API AYARI
 # ==========================================
 API_KEY = os.getenv(
-    "GEMINI_API_KEY", "your_api_key_here"  # Ortam değişkeni yoksa buraya kendi API anahtarınızı yazın
+    "GEMINI_API_KEY", "your api key"  
 )
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-3.6-flash")
